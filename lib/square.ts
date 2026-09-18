@@ -1,0 +1,40 @@
+import { SquareClient, SquareEnvironment } from "square";
+
+export function getSquareEnvironment(): SquareEnvironment {
+  return process.env.SQUARE_ENVIRONMENT === "production"
+    ? SquareEnvironment.Production
+    : SquareEnvironment.Sandbox;
+}
+
+export function isSquareConfigured(): boolean {
+  return Boolean(
+    process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID,
+  );
+}
+
+export function getSquareClient(): SquareClient {
+  const token = process.env.SQUARE_ACCESS_TOKEN;
+  if (!token) {
+    throw new Error("SQUARE_ACCESS_TOKEN is not set.");
+  }
+
+  return new SquareClient({
+    token,
+    environment: getSquareEnvironment(),
+  });
+}
+
+export function getSquareLocationId(): string {
+  const locationId = process.env.SQUARE_LOCATION_ID;
+  if (!locationId) {
+    throw new Error("SQUARE_LOCATION_ID is not set.");
+  }
+  return locationId;
+}
+
+export function getSiteUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "http://localhost:3000"
+  );
+}

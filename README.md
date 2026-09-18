@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ghetto Link Books
 
-## Getting Started
+Storefront for digital short stories. Books are $10 each, buy 2 get 1 free. Checkout goes to a Square-hosted page with Cash App Pay enabled.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Square checkout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy these into `.env.local` from the [Square Developer Dashboard](https://developer.squareup.com/apps):
 
-## Learn More
+- `SQUARE_ACCESS_TOKEN`
+- `SQUARE_LOCATION_ID`
+- `SQUARE_ENVIRONMENT` — `sandbox` until you are ready to take real money
+- `NEXT_PUBLIC_SITE_URL` — `http://localhost:3000` locally, then your live URL
 
-To learn more about Next.js, take a look at the following resources:
+In Square Dashboard, enable Cash App Pay for payment links. Hosted Square checkout also accepts cards; that is a Square limitation, not something this site can turn off.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Without those keys, Pay with Cash App shows a configuration error instead of redirecting.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Confirmation email (sandbox)
 
-## Deploy on Vercel
+Square does not send the book email. After a paid order, this site sends a confirmation with [Resend](https://resend.com).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create a free Resend account and an API key at [resend.com/api-keys](https://resend.com/api-keys).
+2. Put `RESEND_API_KEY` in `.env.local`. Set `EMAIL_FROM=Ghetto Link Books <orders@ghettolink22.com>` after `ghettolink22.com` is verified in Resend. Replies go to `EMAIL_REPLY_TO` (`ghettolink22@gmail.com`).
+3. Restart `npm run dev`.
+4. At checkout, use **the same email as your Resend account**. The `resend.dev` test sender can only deliver to that address until you verify your own domain.
+5. Pay in Square sandbox, then land on `/success`. If Square marks the order paid, the email goes out.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Optional: in the Developer Console, subscribe a **Sandbox** webhook to `payment.updated` pointing at `https://your-public-url/api/webhooks/square`, then set `SQUARE_WEBHOOK_SIGNATURE_KEY`. Localhost is not reachable unless you use a tunnel such as ngrok. The success page still sends the email without a webhook.
+
+## Swap in real books
+
+Edit [`data/books.ts`](data/books.ts) and replace the SVG files in [`public/covers/`](public/covers/). Keep PDFs off the public site; email files after you see the paid order in Square.
