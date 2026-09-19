@@ -3,7 +3,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import type { Book } from "@/data/books";
 import {
-  BOOK_PRICE_CENTS,
   formatUsdFromCents,
   freeBookCount,
   totalCents,
@@ -80,24 +79,22 @@ export function Storefront({ books }: { books: Book[] }) {
 
   return (
     <div className="flex h-dvh flex-col">
-      <header className="flex shrink-0 items-end justify-between gap-4 border-b border-ink/15 px-3 py-2.5 sm:px-6">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold">
-            Independent press
-          </p>
-          <h1 className="font-serif text-2xl leading-none text-ink sm:text-3xl">
-            Ghetto Link Books
-          </h1>
-        </div>
-        <p className="shrink-0 text-right text-xs leading-5 text-ink/70 sm:text-sm">
-          {formatUsdFromCents(BOOK_PRICE_CENTS)} each.
-          <br />
-          Buy two, get one free.
+      <header className="shrink-0 border-b border-ink/15 px-3 py-2.5 sm:px-6">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-gold">
+          Independent press
+        </p>
+        <h1 className="font-serif text-2xl leading-none text-ink sm:text-3xl">
+          Ghetto Link Books
+        </h1>
+        <h2 className="mt-2 font-serif text-lg leading-tight text-ink sm:text-xl">
+          Select the books you want
+        </h2>
+        <p className="mt-0.5 text-sm text-ink/70">
+          $10 each buy 2 get one free.
         </p>
       </header>
 
       <section className="min-h-0 flex-1 px-2 py-2 sm:px-4 sm:py-3">
-        <h2 className="sr-only">Choose your books</h2>
         <ul className="grid h-full grid-cols-7 gap-1.5 sm:gap-2 lg:gap-3">
           {books.map((book) => {
             const selected = selectedIds.includes(book.id);
@@ -156,8 +153,13 @@ export function Storefront({ books }: { books: Book[] }) {
           </div>
 
           <div className="flex w-full gap-2 sm:w-auto sm:items-end">
-            <label className="flex min-w-0 flex-1 flex-col gap-0.5 text-xs text-ink/80 sm:w-56 sm:flex-none">
-              Email for your files
+            <label className="flex min-w-0 flex-1 flex-col gap-0.5 text-xs font-medium text-ink sm:w-56 sm:flex-none">
+              <span className="flex items-center gap-1">
+                Enter your email
+                <span aria-hidden="true" className="text-gold">
+                  ↓
+                </span>
+              </span>
               <input
                 type="email"
                 name="email"
@@ -174,7 +176,7 @@ export function Storefront({ books }: { books: Book[] }) {
               disabled={submitting || count === 0}
               className="shrink-0 bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:py-2"
             >
-              {submitting ? "Starting checkout…" : "Pay with Cash App"}
+              {submitting ? "Starting checkout…" : "Proceed to Payment"}
             </button>
           </div>
         </div>
