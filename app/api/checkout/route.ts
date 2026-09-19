@@ -91,6 +91,9 @@ export async function POST(request: Request) {
       order: {
         locationId,
         referenceId: checkoutRef,
+        metadata: {
+          buyer_email: email.slice(0, 255),
+        },
         lineItems: selectedBooks.map((book) => ({
           name: book.title,
           quantity: "1",
@@ -142,10 +145,25 @@ export async function POST(request: Request) {
       paymentLink: {
         version: paymentLink.version,
         checkoutOptions: {
-          redirectUrl: `${siteUrl}/success?orderId=${encodeURIComponent(orderId)}`,
+          redirectUrl: `${siteUrl}/success?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}`,
         },
       },
     });
+
+    const created = await client.orders.get({ orderId });
+    if (created.order?.version != null && created.order.locationId) {
+      await client.orders.update({
+        orderId,
+        order: {
+          locationId: created.order.locationId,
+          version: created.order.version,
+          metadata: {
+            ...created.order.metadata,
+            buyer_email: email.slice(0, 255),
+          },
+        },
+      });
+    }
 
     return NextResponse.json({ url });
   } catch (error) {

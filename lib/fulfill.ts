@@ -21,23 +21,63 @@ function isOrderPaid(order: {
 }
 
 async function getBuyerEmail(
-  order: { tenders?: Array<{ id?: string }> | null },
+  order: {
+    metadata?: Record<string, string | null> | null;
+    tenders?: Array<{ id?: string; paymentId?: string | null; note?: string | null }> | null;
+  },
+  fallbackEmail?: string,
 ): Promise<string | undefined> {
+  const fromMetadata = order.metadata?.buyer_email?.trim();
+  if (fromMetadata) {
+    return fromMetadata;
+  }
+
+  if (fallbackEmail?.includes("@")) {
+    return fallbackEmail.trim();
+  }
+
   const client = getSquareClient();
-  for (const tender of order.tenders ?? []) {
-    if (!tender.id) {
-      continue;
+  const paymentIds = [
+    ...new Set(
+      (order.tenders ?? [])
+        .flatMap((tender) => [tender.paymentId, tender.id])
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  for (const paymentId of paymentIds) {
+    try {
+      const { payment } = await client.payments.get({ paymentId });
+      const email =
+        payment?.buyerEmailAddress?.trim() ||
+        parseDeliveryEmail(payment?.note);
+      if (email) {
+        return email;
+      }
+    } catch (error) {
+      console.error(error);
     }
-    const { payment } = await client.payments.get({ paymentId: tender.id });
-    const email = payment?.buyerEmailAddress?.trim();
+  }
+
+  for (const tender of order.tenders ?? []) {
+    const email = parseDeliveryEmail(tender.note);
     if (email) {
       return email;
     }
   }
+
   return undefined;
 }
 
-export async function fulfillPaidOrder(orderId: string): Promise<FulfillResult> {
+function parseDeliveryEmail(note?: string | null): string | undefined {
+  const match = note?.match(/Digital delivery to\s+(\S+@\S+)/i);
+  return match?.[1];
+}
+
+export async function fulfillPaidOrder(
+  orderId: string,
+  fallbackEmail?: string,
+): Promise<FulfillResult> {
   const client = getSquareClient();
   let order;
   try {
@@ -69,7 +109,7 @@ export async function fulfillPaidOrder(orderId: string): Promise<FulfillResult> 
 
   let email: string | undefined;
   try {
-    email = await getBuyerEmail(order);
+    email = await getBuyerEmail(order, fallbackEmail);
   } catch (error) {
     console.error(error);
   }

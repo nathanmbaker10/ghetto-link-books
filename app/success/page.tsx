@@ -4,11 +4,11 @@ import { fulfillPaidOrder } from "@/lib/fulfill";
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; email?: string }>;
 }) {
-  const { orderId } = await searchParams;
+  const { orderId, email } = await searchParams;
   const result = orderId
-    ? await fulfillPaidOrder(orderId)
+    ? await fulfillPaidOrder(orderId, email)
     : { status: "missing" as const };
 
   const message = messageFor(
