@@ -2,7 +2,6 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { SquareError } from "square";
 import { getBooksByIds } from "@/data/books";
-import { saveOrder } from "@/lib/orders";
 import {
   BOOK_PRICE_CENTS,
   freeBookCount,
@@ -96,7 +95,7 @@ export async function POST(request: Request) {
         lineItems: selectedBooks.map((book) => ({
           name: book.title,
           quantity: "1",
-          note: "Digital short story",
+          note: book.id,
           basePriceMoney: {
             amount: BigInt(BOOK_PRICE_CENTS),
             currency: "USD",
@@ -119,7 +118,7 @@ export async function POST(request: Request) {
       },
       checkoutOptions: {
         askForShippingAddress: false,
-        redirectUrl: `${siteUrl}/success?ref=${encodeURIComponent(checkoutRef)}`,
+        redirectUrl: `${siteUrl}/success`,
         acceptedPaymentMethods: {
           cashAppPay: true,
         },
@@ -129,20 +128,24 @@ export async function POST(request: Request) {
       },
     });
 
-    const url = response.paymentLink?.url;
-    const orderId = response.paymentLink?.orderId;
-    if (!url || !orderId) {
+    const paymentLink = response.paymentLink;
+    const url = paymentLink?.url;
+    const orderId = paymentLink?.orderId;
+    if (!url || !orderId || !paymentLink.id || paymentLink.version == null) {
       return NextResponse.json(
         { error: "Square did not return a checkout URL." },
         { status: 502 },
       );
     }
 
-    saveOrder({
-      orderId,
-      checkoutRef,
-      email,
-      bookIds: uniqueIds,
+    await client.checkout.paymentLinks.update({
+      id: paymentLink.id,
+      paymentLink: {
+        version: paymentLink.version,
+        checkoutOptions: {
+          redirectUrl: `${siteUrl}/success?orderId=${encodeURIComponent(orderId)}`,
+        },
+      },
     });
 
     return NextResponse.json({ url });

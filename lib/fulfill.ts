@@ -1,6 +1,5 @@
 import { getBooksByIds } from "@/data/books";
 import { sendOrderEmail } from "@/lib/email";
-import { getOrder, getOrderByRef, markOrderEmailed } from "@/lib/orders";
 import { totalCents } from "@/lib/pricing";
 import { getSquareClient } from "@/lib/square";
 
@@ -11,61 +10,103 @@ export type FulfillResult =
   | { status: "missing" }
   | { status: "email_failed"; error: string };
 
-export async function isSquareOrderPaid(orderId: string): Promise<boolean> {
-  const client = getSquareClient();
-  const { order } = await client.orders.get({ orderId });
-  if (!order) {
-    return false;
-  }
+function isOrderPaid(order: {
+  state?: string;
+  tenders?: unknown[] | null;
+}): boolean {
   if (order.state === "COMPLETED") {
     return true;
   }
-  if ((order.tenders ?? []).length > 0) {
-    return true;
-  }
-  return false;
+  return (order.tenders ?? []).length > 0;
 }
 
-export async function fulfillByCheckoutRef(
-  checkoutRef: string,
-): Promise<FulfillResult> {
-  const stored = getOrderByRef(checkoutRef);
-  if (!stored) {
-    return { status: "missing" };
+async function getBuyerEmail(
+  order: { tenders?: Array<{ id?: string }> | null },
+): Promise<string | undefined> {
+  const client = getSquareClient();
+  for (const tender of order.tenders ?? []) {
+    if (!tender.id) {
+      continue;
+    }
+    const { payment } = await client.payments.get({ paymentId: tender.id });
+    const email = payment?.buyerEmailAddress?.trim();
+    if (email) {
+      return email;
+    }
   }
-  return fulfillPaidOrder(stored.orderId);
+  return undefined;
 }
 
 export async function fulfillPaidOrder(orderId: string): Promise<FulfillResult> {
-  const stored = getOrder(orderId);
-  if (!stored) {
+  const client = getSquareClient();
+  let order;
+  try {
+    ({ order } = await client.orders.get({ orderId }));
+  } catch (error) {
+    console.error(error);
     return { status: "missing" };
   }
-  if (stored.emailSentAt) {
+
+  if (!order) {
+    return { status: "missing" };
+  }
+
+  if (order.metadata?.emailed === "1") {
     return { status: "already" };
   }
 
-  try {
-    const paid = await isSquareOrderPaid(orderId);
-    if (!paid) {
-      return { status: "unpaid" };
-    }
-  } catch (error) {
-    console.error(error);
+  if (!isOrderPaid(order)) {
     return { status: "unpaid" };
   }
 
-  const books = getBooksByIds(stored.bookIds);
+  const bookIds = (order.lineItems ?? [])
+    .map((item) => item.note)
+    .filter((note): note is string => Boolean(note));
+  const selectedBooks = getBooksByIds(bookIds);
+  if (selectedBooks.length === 0) {
+    return { status: "missing" };
+  }
+
+  let email: string | undefined;
+  try {
+    email = await getBuyerEmail(order);
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (!email) {
+    return {
+      status: "email_failed",
+      error: "Square did not return the buyer email for this payment.",
+    };
+  }
+
   const { error } = await sendOrderEmail({
-    to: stored.email,
-    books,
-    totalCents: totalCents(books.length),
+    to: email,
+    books: selectedBooks,
+    totalCents: totalCents(selectedBooks.length),
   });
 
   if (error) {
     return { status: "email_failed", error };
   }
 
-  markOrderEmailed(orderId);
+  if (order.version != null) {
+    try {
+      await client.orders.update({
+        orderId,
+        order: {
+          version: order.version,
+          metadata: {
+            ...order.metadata,
+            emailed: "1",
+          },
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return { status: "sent" };
 }

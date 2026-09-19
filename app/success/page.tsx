@@ -1,19 +1,20 @@
 import Link from "next/link";
-import { fulfillByCheckoutRef, fulfillPaidOrder } from "@/lib/fulfill";
+import { fulfillPaidOrder } from "@/lib/fulfill";
 
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; orderId?: string }>;
+  searchParams: Promise<{ orderId?: string }>;
 }) {
-  const params = await searchParams;
-  const result = params.ref
-    ? await fulfillByCheckoutRef(params.ref)
-    : params.orderId
-      ? await fulfillPaidOrder(params.orderId)
-      : { status: "missing" as const };
+  const { orderId } = await searchParams;
+  const result = orderId
+    ? await fulfillPaidOrder(orderId)
+    : { status: "missing" as const };
 
-  const message = messageFor(result?.status, result && "error" in result ? result.error : undefined);
+  const message = messageFor(
+    result.status,
+    result.status === "email_failed" ? result.error : undefined,
+  );
 
   return (
     <main className="mx-auto flex min-h-full max-w-2xl flex-col justify-center px-6 py-20">
@@ -33,7 +34,7 @@ export default async function SuccessPage({
 }
 
 function messageFor(
-  status: "sent" | "already" | "unpaid" | "missing" | "email_failed" | undefined,
+  status: "sent" | "already" | "unpaid" | "missing" | "email_failed",
   error?: string,
 ): string {
   switch (status) {
@@ -49,7 +50,5 @@ function messageFor(
         : "Payment looks good, but the confirmation email did not send.";
     case "missing":
       return "If you just paid, refresh after Square sends you back from checkout. If this page opened on its own, go back to the catalog.";
-    default:
-      return "If payment went through, watch the inbox you entered at checkout.";
   }
 }
