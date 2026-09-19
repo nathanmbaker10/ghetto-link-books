@@ -86,10 +86,10 @@ export function Storefront({ books }: { books: Book[] }) {
         <h1 className="font-serif text-2xl leading-none text-ink sm:text-3xl">
           Ghetto Link Books
         </h1>
-        <h2 className="mt-2 font-serif text-lg leading-tight text-ink sm:text-xl">
+        <h2 className="mt-3 text-center font-serif text-3xl leading-tight text-ink sm:text-4xl">
           Select the books you want
         </h2>
-        <p className="mt-0.5 text-sm text-ink/70">
+        <p className="mt-1 text-center text-xl text-ink/80 sm:text-2xl">
           $10 each buy 2 get one free.
         </p>
       </header>
@@ -135,49 +135,49 @@ export function Storefront({ books }: { books: Book[] }) {
         onSubmit={onCheckout}
         className="shrink-0 border-t border-ink/15 bg-paper px-3 py-3 sm:px-6"
       >
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-serif text-base text-ink sm:text-lg">
-              {count === 0
-                ? "No books selected"
-                : `${count} book${count === 1 ? "" : "s"} · ${formatUsdFromCents(total)}`}
-            </p>
-            <p className="truncate text-xs text-ink/70">
-              {free > 0
-                ? `${free} free with buy 2 get 1 free.`
-                : "Third book is free."}
-              {selectedBooks.length > 0
-                ? ` ${selectedBooks.map((book) => book.title).join(" · ")}`
-                : ""}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <p className="font-serif text-base text-ink sm:text-lg">
+            {count === 0
+              ? "No books selected"
+              : `${count} book${count === 1 ? "" : "s"} · ${formatUsdFromCents(total)}`}
+          </p>
+          <p className="truncate text-xs text-ink/70">
+            {free > 0
+              ? `${free} free with buy 2 get 1 free.`
+              : "Third book is free."}
+            {selectedBooks.length > 0
+              ? ` ${selectedBooks.map((book) => book.title).join(" · ")}`
+              : ""}
+          </p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+          <label className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <span className="flex items-center gap-2 font-serif text-2xl text-ink sm:text-3xl">
+              Enter your email
+              <span aria-hidden="true" className="text-gold">
+                →
+              </span>
+            </span>
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full max-w-md border border-ink/20 bg-white px-3 py-2 text-base text-ink outline-none focus:border-gold sm:w-80"
+              placeholder="you@email.com"
+            />
+          </label>
           <button
             type="submit"
             disabled={submitting || count === 0}
-            className="shrink-0 bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:py-2"
+            className="shrink-0 bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-6 sm:py-2.5"
           >
             {submitting ? "Starting checkout…" : "Proceed to Payment"}
           </button>
         </div>
-
-        <label className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-          <span className="flex items-center gap-2 font-serif text-2xl text-ink sm:text-3xl">
-            Enter your email
-            <span aria-hidden="true" className="text-gold">
-              →
-            </span>
-          </span>
-          <input
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full max-w-md border border-ink/20 bg-white px-3 py-2 text-base text-ink outline-none focus:border-gold sm:w-80"
-            placeholder="you@email.com"
-          />
-        </label>
         {error ? (
           <p className="mt-2 text-center text-sm text-red-800" role="alert">
             {error}
