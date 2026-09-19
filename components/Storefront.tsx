@@ -133,9 +133,9 @@ export function Storefront({ books }: { books: Book[] }) {
 
       <form
         onSubmit={onCheckout}
-        className="shrink-0 border-t border-ink/15 bg-paper px-3 py-2.5 sm:px-6"
+        className="shrink-0 border-t border-ink/15 bg-paper px-3 py-3 sm:px-6"
       >
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
             <p className="font-serif text-base text-ink sm:text-lg">
               {count === 0
@@ -151,37 +151,35 @@ export function Storefront({ books }: { books: Book[] }) {
                 : ""}
             </p>
           </div>
-
-          <div className="flex w-full gap-2 sm:w-auto sm:items-end">
-            <label className="flex min-w-0 flex-1 flex-col gap-0.5 text-xs font-medium text-ink sm:w-56 sm:flex-none">
-              <span className="flex items-center gap-1">
-                Enter your email
-                <span aria-hidden="true" className="text-gold">
-                  ↓
-                </span>
-              </span>
-              <input
-                type="email"
-                name="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="border border-ink/20 bg-white px-2.5 py-1.5 text-sm text-ink outline-none focus:border-gold"
-                placeholder="you@email.com"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={submitting || count === 0}
-              className="shrink-0 bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:py-2"
-            >
-              {submitting ? "Starting checkout…" : "Proceed to Payment"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={submitting || count === 0}
+            className="shrink-0 bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-5 sm:py-2"
+          >
+            {submitting ? "Starting checkout…" : "Proceed to Payment"}
+          </button>
         </div>
+
+        <label className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <span className="flex items-center gap-2 font-serif text-2xl text-ink sm:text-3xl">
+            Enter your email
+            <span aria-hidden="true" className="text-gold">
+              →
+            </span>
+          </span>
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="w-full max-w-md border border-ink/20 bg-white px-3 py-2 text-base text-ink outline-none focus:border-gold sm:w-80"
+            placeholder="you@email.com"
+          />
+        </label>
         {error ? (
-          <p className="mt-2 text-sm text-red-800" role="alert">
+          <p className="mt-2 text-center text-sm text-red-800" role="alert">
             {error}
           </p>
         ) : null}
