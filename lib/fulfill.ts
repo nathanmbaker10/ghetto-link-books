@@ -91,11 +91,12 @@ export async function fulfillPaidOrder(orderId: string): Promise<FulfillResult> 
     return { status: "email_failed", error };
   }
 
-  if (order.version != null) {
+  if (order.version != null && order.locationId) {
     try {
       await client.orders.update({
         orderId,
         order: {
+          locationId: order.locationId,
           version: order.version,
           metadata: {
             ...order.metadata,
