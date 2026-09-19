@@ -14,6 +14,7 @@ export function Storefront({ books }: { books: Book[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const selectedBooks = useMemo(
@@ -24,6 +25,23 @@ export function Storefront({ books }: { books: Book[] }) {
   const count = selectedBooks.length;
   const free = freeBookCount(count);
   const total = totalCents(count);
+  const emailIsValid = emailPattern.test(email.trim());
+  const paymentReady = count > 0 && emailIsValid && !submitting;
+
+  function checkoutBlockMessage(): string | null {
+    const missingBook = count === 0;
+    const missingEmail = !emailIsValid;
+    if (missingBook && missingEmail) {
+      return "Pick a book and enter a valid email to continue.";
+    }
+    if (missingBook) {
+      return "Pick a book to continue.";
+    }
+    if (missingEmail) {
+      return "Enter a valid email to continue.";
+    }
+    return null;
+  }
 
   function toggleBook(id: string) {
     setError(null);
@@ -163,7 +181,6 @@ export function Storefront({ books }: { books: Book[] }) {
               type="email"
               name="email"
               autoComplete="email"
-              required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="w-full max-w-md border border-ink/20 bg-white px-3 py-2 text-base text-ink outline-none focus:border-gold sm:w-80"
@@ -171,9 +188,18 @@ export function Storefront({ books }: { books: Book[] }) {
             />
           </label>
           <button
-            type="submit"
-            disabled={submitting || count === 0}
-            className="shrink-0 bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wider text-paper disabled:cursor-not-allowed disabled:opacity-40 sm:px-6 sm:py-2.5"
+            type={paymentReady ? "submit" : "button"}
+            disabled={submitting}
+            aria-disabled={!paymentReady}
+            onClick={() => {
+              const message = checkoutBlockMessage();
+              if (message) {
+                setPrompt(message);
+              }
+            }}
+            className={`shrink-0 bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wider text-paper sm:px-6 sm:py-2.5 ${
+              paymentReady ? "" : "cursor-not-allowed opacity-40"
+            } disabled:cursor-not-allowed disabled:opacity-40`}
           >
             {submitting ? "Starting checkout…" : "Proceed to Payment"}
           </button>
@@ -184,6 +210,35 @@ export function Storefront({ books }: { books: Book[] }) {
           </p>
         ) : null}
       </form>
+      {prompt ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          onClick={() => setPrompt(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-prompt-title"
+            className="w-full max-w-md bg-paper px-6 py-5 shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2
+              id="checkout-prompt-title"
+              className="font-serif text-2xl text-ink"
+            >
+              Almost there
+            </h2>
+            <p className="mt-3 text-base leading-7 text-ink/80">{prompt}</p>
+            <button
+              type="button"
+              onClick={() => setPrompt(null)}
+              className="mt-5 bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wider text-paper"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
