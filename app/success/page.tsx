@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orderId?: string; email?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { orderId, email } = await searchParams;
+  const params = await searchParams;
+  const orderId = queryValue(params, "orderId", "order_id");
+  const email = queryValue(params, "email");
   const result = orderId
     ? await fulfillPaidOrder(orderId, email)
     : { status: "missing" as const };
@@ -53,4 +55,21 @@ function messageFor(
     case "missing":
       return "If you just paid, refresh after Square sends you back from checkout. If this page opened on its own, go back to the catalog.";
   }
+}
+
+function queryValue(
+  params: Record<string, string | string[] | undefined>,
+  ...keys: string[]
+): string | undefined {
+  const normalized = Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [key.toLowerCase(), value]),
+  );
+  for (const key of keys) {
+    const value = normalized[key.toLowerCase()];
+    const text = Array.isArray(value) ? value[0] : value;
+    if (text) {
+      return text;
+    }
+  }
+  return undefined;
 }

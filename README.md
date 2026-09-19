@@ -38,6 +38,9 @@ The app is already wired for production. You only change Square credentials and 
    - `SQUARE_ACCESS_TOKEN` = the production token
    - `SQUARE_LOCATION_ID` = the production location ID
    - `SITE_URL` = your live `https://` URL (Vercel domain or `https://ghettolink22.com`)
+   - `RESEND_API_KEY` = the same Resend key that worked in sandbox
+   - `EMAIL_FROM` = `Ghetto Link Books <orders@ghettolink22.com>`
+   - `EMAIL_REPLY_TO` = `ghettolink22@gmail.com`
 6. Redeploy. Do a real $10 test with your own card or Cash App, then refund it in Square if you want.
 
 Keep local `.env.local` on `sandbox` so laptop tests stay fake money.
@@ -50,7 +53,7 @@ After a paid order, this site sends a confirmation with [Resend](https://resend.
 2. Put `RESEND_API_KEY` in `.env.local` and on Vercel. Set `EMAIL_FROM=Ghetto Link Books <orders@ghettolink22.com>` after `ghettolink22.com` is verified in Resend. Replies go to `EMAIL_REPLY_TO` (`ghettolink22@gmail.com`).
 3. Restart `npm run dev` after local env changes.
 
-Optional: in the Developer Console, subscribe a **Production** webhook to `payment.updated` pointing at `https://your-live-url/api/webhooks/square`, then set `SQUARE_WEBHOOK_SIGNATURE_KEY`. The success page still sends email without a webhook.
+Optional: in the Developer Console (**Production** toggle), open **Webhooks**, add notification URL `https://YOUR-LIVE-SITE/api/webhooks/square`, and subscribe to `payment.updated` and `order.updated`. That sends the confirmation even if the buyer never returns to the thank-you page. Then set `SQUARE_WEBHOOK_SIGNATURE_KEY` on Vercel.
 
 ## Swap in real books
 

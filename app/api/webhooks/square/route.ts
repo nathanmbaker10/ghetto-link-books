@@ -3,6 +3,8 @@ import { WebhooksHelper } from "square";
 import { fulfillPaidOrder } from "@/lib/fulfill";
 import { getSiteUrl } from "@/lib/square";
 
+type Json = Record<string, unknown>;
+
 export async function POST(request: Request) {
   const signatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
   const body = await request.text();
@@ -20,37 +22,59 @@ export async function POST(request: Request) {
     }
   }
 
-  let payload: {
-    type?: string;
-    data?: {
-      object?: {
-        payment?: {
-          status?: string;
-          order_id?: string;
-          orderId?: string;
-          buyer_email_address?: string;
-          buyerEmailAddress?: string;
-        };
-      };
-    };
-  };
-
+  let payload: Json;
   try {
-    payload = JSON.parse(body) as typeof payload;
+    payload = JSON.parse(body) as Json;
   } catch {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
-  if (payload.type !== "payment.updated") {
-    return NextResponse.json({ ok: true });
-  }
+  const type = String(payload.type ?? "");
+  const paymentEvents = new Set([
+    "payment.updated",
+    "payment.created",
+  ]);
+  const orderEvents = new Set(["order.updated", "order.created"]);
 
-  const payment = payload.data?.object?.payment;
-  const orderId = payment?.orderId ?? payment?.order_id;
-  if (payment?.status === "COMPLETED" && orderId) {
-    const email = payment.buyerEmailAddress ?? payment.buyer_email_address;
-    await fulfillPaidOrder(orderId, email);
+  if (paymentEvents.has(type)) {
+    const payment = nested(payload, ["data", "object", "payment"]) ??
+      nested(payload, ["data", "object"]);
+    const status = str(payment, "status");
+    const orderId = str(payment, "orderId") ?? str(payment, "order_id");
+    const email =
+      str(payment, "buyerEmailAddress") ?? str(payment, "buyer_email_address");
+    if (status === "COMPLETED" && orderId) {
+      await fulfillPaidOrder(orderId, email);
+    }
+  } else if (orderEvents.has(type)) {
+    const order =
+      nested(payload, ["data", "object", "order"]) ??
+      nested(payload, ["data", "object", "order_updated"]) ??
+      nested(payload, ["data", "object"]);
+    const orderId = str(order, "orderId") ?? str(order, "order_id") ?? str(order, "id");
+    if (orderId) {
+      await fulfillPaidOrder(orderId);
+    }
   }
 
   return NextResponse.json({ ok: true });
+}
+
+function nested(value: unknown, path: string[]): Json | undefined {
+  let current: unknown = value;
+  for (const key of path) {
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+    current = (current as Json)[key];
+  }
+  if (!current || typeof current !== "object") {
+    return undefined;
+  }
+  return current as Json;
+}
+
+function str(obj: Json | undefined, key: string): string | undefined {
+  const value = obj?.[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 }

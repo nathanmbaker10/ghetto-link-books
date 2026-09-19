@@ -33,8 +33,15 @@ export function getSquareLocationId(): string {
 }
 
 export function getSiteUrl(): string {
-  return (
-    process.env.SITE_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
+  const explicit = process.env.SITE_URL?.replace(/\/$/, "");
+  if (explicit) {
+    return explicit;
+  }
+
+  const vercelHost = process.env.VERCEL_URL?.replace(/\/$/, "");
+  if (vercelHost) {
+    return vercelHost.startsWith("http") ? vercelHost : `https://${vercelHost}`;
+  }
+
+  return "http://localhost:3000";
 }

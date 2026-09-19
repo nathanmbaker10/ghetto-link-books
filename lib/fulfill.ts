@@ -101,6 +101,29 @@ export async function fulfillPaidOrder(
     return { status: "already" };
   }
 
+  let retries = 0;
+  while (!isOrderPaid(order)) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const refreshed = await client.orders.get({ orderId });
+      if (!refreshed.order) {
+        return { status: "missing" };
+      }
+      order = refreshed.order;
+    } catch (error) {
+      console.error(error);
+      return { status: "unpaid" };
+    }
+    retries += 1;
+    if (retries >= 5) {
+      break;
+    }
+  }
+
+  if (order.metadata?.emailed === "1") {
+    return { status: "already" };
+  }
+
   if (!isOrderPaid(order)) {
     return { status: "unpaid" };
   }
@@ -127,6 +150,12 @@ export async function fulfillPaidOrder(
   }
 
   if (!email) {
+    const shopInbox = process.env.EMAIL_REPLY_TO ?? "ghettolink22@gmail.com";
+    await sendOrderEmail({
+      to: shopInbox,
+      books: selectedBooks,
+      totalCents: totalCents(selectedBooks.length),
+    });
     return {
       status: "email_failed",
       error: "Square did not return the buyer email for this payment.",

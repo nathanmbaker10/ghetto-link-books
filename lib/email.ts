@@ -19,7 +19,7 @@ export async function sendOrderEmail({
   if (!apiKey) {
     return {
       error:
-        "Add RESEND_API_KEY to .env.local. Create a free key at https://resend.com/api-keys",
+        "RESEND_API_KEY is not set on the server. Add it in Vercel environment variables.",
     };
   }
 
