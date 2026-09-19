@@ -61,8 +61,7 @@ export async function POST(request: Request) {
   if (!isSquareConfigured()) {
     return NextResponse.json(
       {
-        error:
-          "Checkout is not configured yet. Add Square sandbox credentials to .env.local.",
+        error: "Checkout is not configured yet. Add Square credentials in the host environment.",
       },
       { status: 503 },
     );
