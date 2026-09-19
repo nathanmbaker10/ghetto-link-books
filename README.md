@@ -18,25 +18,40 @@ Copy these into `.env.local` from the [Square Developer Dashboard](https://devel
 
 - `SQUARE_ACCESS_TOKEN`
 - `SQUARE_LOCATION_ID`
-- `SQUARE_ENVIRONMENT` — `sandbox` until you are ready to take real money
-- `SITE_URL` — `http://localhost:3000` locally, then your live URL (server-only; do not use a `NEXT_PUBLIC_` prefix)
+- `SQUARE_ENVIRONMENT` — `sandbox` on your laptop; `production` on the live site
+- `SITE_URL` — `http://localhost:3000` locally, then your live `https://` URL (server-only)
 
 In Square Dashboard, enable Cash App Pay for payment links. Hosted Square checkout also accepts cards; that is a Square limitation, not something this site can turn off.
 
 Without those keys, Pay with Cash App shows a configuration error instead of redirecting.
 
-## Confirmation email (sandbox)
+## Go live (real money)
 
-Square does not send the book email. After a paid order, this site sends a confirmation with [Resend](https://resend.com).
+The app is already wired for production. You only change Square credentials and env vars.
+
+1. Open [developer.squareup.com/apps](https://developer.squareup.com/apps), open your app, and set the toggle at the top to **Production** (not Sandbox).
+2. **Credentials** → copy the **Production** access token.
+3. **Locations** → copy the **Production** location ID (different from sandbox).
+4. In the real [Square Dashboard](https://squareup.com/dashboard) (not the Sandbox test dashboard), enable **Cash App Pay** on payment links.
+5. In **Vercel → Settings → Environment Variables** (Production), set:
+   - `SQUARE_ENVIRONMENT` = `production`
+   - `SQUARE_ACCESS_TOKEN` = the production token
+   - `SQUARE_LOCATION_ID` = the production location ID
+   - `SITE_URL` = your live `https://` URL (Vercel domain or `https://ghettolink22.com`)
+6. Redeploy. Do a real $10 test with your own card or Cash App, then refund it in Square if you want.
+
+Keep local `.env.local` on `sandbox` so laptop tests stay fake money.
+
+## Confirmation email
+
+After a paid order, this site sends a confirmation with [Resend](https://resend.com).
 
 1. Create a free Resend account and an API key at [resend.com/api-keys](https://resend.com/api-keys).
-2. Put `RESEND_API_KEY` in `.env.local`. Set `EMAIL_FROM=Ghetto Link Books <orders@ghettolink22.com>` after `ghettolink22.com` is verified in Resend. Replies go to `EMAIL_REPLY_TO` (`ghettolink22@gmail.com`).
-3. Restart `npm run dev`.
-4. At checkout, use **the same email as your Resend account**. The `resend.dev` test sender can only deliver to that address until you verify your own domain.
-5. Pay in Square sandbox, then land on `/success`. If Square marks the order paid, the email goes out.
+2. Put `RESEND_API_KEY` in `.env.local` and on Vercel. Set `EMAIL_FROM=Ghetto Link Books <orders@ghettolink22.com>` after `ghettolink22.com` is verified in Resend. Replies go to `EMAIL_REPLY_TO` (`ghettolink22@gmail.com`).
+3. Restart `npm run dev` after local env changes.
 
-Optional: in the Developer Console, subscribe a **Sandbox** webhook to `payment.updated` pointing at `https://your-public-url/api/webhooks/square`, then set `SQUARE_WEBHOOK_SIGNATURE_KEY`. Localhost is not reachable unless you use a tunnel such as ngrok. The success page still sends the email without a webhook.
+Optional: in the Developer Console, subscribe a **Production** webhook to `payment.updated` pointing at `https://your-live-url/api/webhooks/square`, then set `SQUARE_WEBHOOK_SIGNATURE_KEY`. The success page still sends email without a webhook.
 
 ## Swap in real books
 
-Edit [`data/books.ts`](data/books.ts) and replace the SVG files in [`public/covers/`](public/covers/). Keep PDFs off the public site; email files after you see the paid order in Square.
+Edit [`data/books.ts`](data/books.ts) and replace cover files in [`public/covers/`](public/covers/). Keep PDFs off the public site.

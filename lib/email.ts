@@ -42,7 +42,7 @@ export async function sendOrderEmail({
       <p>We received payment for:</p>
       <ul>${list}</ul>
       <p>Total: ${formatUsdFromCents(totalCents)}</p>
-      <p>Digital files will follow once they are attached to this store. This is a sandbox confirmation email.</p>
+      <p>Digital files will be emailed after this confirmation. Reply to this message if you need help.</p>
     `,
   });
 
