@@ -94,6 +94,7 @@ export async function POST(request: Request) {
         metadata: {
           buyer_email: email.slice(0, 255),
         },
+        ticketName: email.slice(0, 255),
         lineItems: selectedBooks.map((book) => ({
           name: book.title,
           quantity: "1",
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
       },
       checkoutOptions: {
         askForShippingAddress: false,
-        redirectUrl: `${siteUrl}/success`,
+        redirectUrl: `${siteUrl}/success?email=${encodeURIComponent(email)}`,
         acceptedPaymentMethods: {
           cashAppPay: true,
         },
@@ -161,6 +162,7 @@ export async function POST(request: Request) {
             ...created.order.metadata,
             buyer_email: email.slice(0, 255),
           },
+          ticketName: email.slice(0, 255),
         },
       });
     }

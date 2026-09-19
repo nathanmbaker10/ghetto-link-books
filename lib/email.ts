@@ -32,10 +32,13 @@ export async function sendOrderEmail({
   const list = titles.map((title) => `<li>${escapeHtml(title)}</li>`).join("");
 
   const resend = new Resend(apiKey);
+  const bcc =
+    replyTo && replyTo.toLowerCase() !== to.toLowerCase() ? [replyTo] : undefined;
   const { error } = await resend.emails.send({
     from,
     to,
     replyTo,
+    bcc,
     subject: "Your Ghetto Link Books order",
     html: `
       <p>Thanks for buying from Ghetto Link Books.</p>
@@ -47,6 +50,7 @@ export async function sendOrderEmail({
   });
 
   if (error) {
+    console.error("Resend error:", error);
     return { error: error.message };
   }
 

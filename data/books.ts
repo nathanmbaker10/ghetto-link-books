@@ -99,3 +99,8 @@ export function getBooksByIds(ids: string[]): Book[] {
     return book ? [book] : [];
   });
 }
+
+export function getBooksByTitles(titles: string[]): Book[] {
+  const wanted = new Set(titles);
+  return books.filter((book) => wanted.has(book.title));
+}

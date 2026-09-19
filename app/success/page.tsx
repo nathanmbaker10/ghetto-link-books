@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { fulfillPaidOrder } from "@/lib/fulfill";
 
+export const dynamic = "force-dynamic";
+
 export default async function SuccessPage({
   searchParams,
 }: {

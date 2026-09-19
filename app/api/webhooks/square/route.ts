@@ -28,6 +28,8 @@ export async function POST(request: Request) {
           status?: string;
           order_id?: string;
           orderId?: string;
+          buyer_email_address?: string;
+          buyerEmailAddress?: string;
         };
       };
     };
@@ -46,7 +48,8 @@ export async function POST(request: Request) {
   const payment = payload.data?.object?.payment;
   const orderId = payment?.orderId ?? payment?.order_id;
   if (payment?.status === "COMPLETED" && orderId) {
-    await fulfillPaidOrder(orderId);
+    const email = payment.buyerEmailAddress ?? payment.buyer_email_address;
+    await fulfillPaidOrder(orderId, email);
   }
 
   return NextResponse.json({ ok: true });

@@ -1,4 +1,4 @@
-import { getBooksByIds } from "@/data/books";
+import { getBooksByIds, getBooksByTitles } from "@/data/books";
 import { sendOrderEmail } from "@/lib/email";
 import { totalCents } from "@/lib/pricing";
 import { getSquareClient } from "@/lib/square";
@@ -23,13 +23,19 @@ function isOrderPaid(order: {
 async function getBuyerEmail(
   order: {
     metadata?: Record<string, string | null> | null;
+    ticketName?: string | null;
     tenders?: Array<{ id?: string; paymentId?: string | null; note?: string | null }> | null;
   },
   fallbackEmail?: string,
 ): Promise<string | undefined> {
   const fromMetadata = order.metadata?.buyer_email?.trim();
-  if (fromMetadata) {
+  if (fromMetadata?.includes("@")) {
     return fromMetadata;
+  }
+
+  const fromTicket = order.ticketName?.trim();
+  if (fromTicket?.includes("@")) {
+    return fromTicket;
   }
 
   if (fallbackEmail?.includes("@")) {
@@ -102,7 +108,13 @@ export async function fulfillPaidOrder(
   const bookIds = (order.lineItems ?? [])
     .map((item) => item.note)
     .filter((note): note is string => Boolean(note));
-  const selectedBooks = getBooksByIds(bookIds);
+  const titles = (order.lineItems ?? [])
+    .map((item) => item.name)
+    .filter((name): name is string => Boolean(name));
+  const selectedBooks =
+    getBooksByIds(bookIds).length > 0
+      ? getBooksByIds(bookIds)
+      : getBooksByTitles(titles);
   if (selectedBooks.length === 0) {
     return { status: "missing" };
   }
