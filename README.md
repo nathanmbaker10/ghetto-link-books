@@ -19,7 +19,7 @@ Copy these into `.env.local` from the [Square Developer Dashboard](https://devel
 - `SQUARE_ACCESS_TOKEN`
 - `SQUARE_LOCATION_ID`
 - `SQUARE_ENVIRONMENT` — `sandbox` until you are ready to take real money
-- `NEXT_PUBLIC_SITE_URL` — `http://localhost:3000` locally, then your live URL
+- `SITE_URL` — `http://localhost:3000` locally, then your live URL (server-only; do not use a `NEXT_PUBLIC_` prefix)
 
 In Square Dashboard, enable Cash App Pay for payment links. Hosted Square checkout also accepts cards; that is a Square limitation, not something this site can turn off.
 
