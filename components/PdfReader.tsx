@@ -2,6 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 
+type PdfDocument = {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<{
+    getViewport: (params: { scale: number }) => { width: number; height: number };
+    render: (params: {
+      canvas: HTMLCanvasElement;
+      canvasContext: CanvasRenderingContext2D;
+      viewport: { width: number; height: number };
+    }) => { cancel: () => void; promise: Promise<unknown> };
+  }>;
+  destroy: () => Promise<void>;
+};
+
 export function PdfReader({
   token,
   title,
@@ -12,46 +25,76 @@ export function PdfReader({
   watermark: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pdfData = useRef<ArrayBuffer | null>(null);
+  const docRef = useRef<PdfDocument | null>(null);
+  const [docReady, setDocReady] = useState(0);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    pdfData.current = null;
+    let cancelled = false;
+    docRef.current = null;
     setPage(1);
+    setPageCount(0);
+    setLoading(true);
+    setError(null);
+
+    async function load() {
+      try {
+        const response = await fetch(`/api/read/${encodeURIComponent(token)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (response.status === 404) {
+          throw new Error("This title is not uploaded yet.");
+        }
+        if (!response.ok) {
+          throw new Error("Could not open this story.");
+        }
+        const data = await response.arrayBuffer();
+        const pdfjs = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+        const pdf = (await pdfjs.getDocument({ data }).promise) as PdfDocument;
+        if (cancelled) {
+          await pdf.destroy();
+          return;
+        }
+        docRef.current = pdf;
+        setPageCount(pdf.numPages);
+        setDocReady((value) => value + 1);
+      } catch (cause) {
+        if (!cancelled) {
+          setError(
+            cause instanceof Error ? cause.message : "Could not open this story.",
+          );
+          setLoading(false);
+        }
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+      const current = docRef.current;
+      docRef.current = null;
+      void current?.destroy();
+    };
   }, [token]);
 
   useEffect(() => {
+    const pdf = docRef.current;
+    if (!pdf || docReady === 0) {
+      return;
+    }
+
     let cancelled = false;
     let renderTask: { cancel: () => void; promise: Promise<unknown> } | undefined;
 
-    async function render() {
+    async function draw() {
       setLoading(true);
       setError(null);
       try {
-        if (!pdfData.current) {
-          const response = await fetch(`/api/read/${encodeURIComponent(token)}`, {
-            credentials: "same-origin",
-            cache: "no-store",
-          });
-          if (response.status === 404) {
-            throw new Error("This title is not uploaded yet.");
-          }
-          if (!response.ok) {
-            throw new Error("Could not open this story.");
-          }
-          pdfData.current = await response.arrayBuffer();
-        }
-        const data = pdfData.current;
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-        const pdf = await pdfjs.getDocument({ data }).promise;
-        if (cancelled) {
-          return;
-        }
-        setPageCount(pdf.numPages);
         const current = Math.min(Math.max(page, 1), pdf.numPages);
         const pdfPage = await pdf.getPage(current);
         const canvas = canvasRef.current;
@@ -59,7 +102,10 @@ export function PdfReader({
           return;
         }
         const base = pdfPage.getViewport({ scale: 1 });
-        const scale = Math.min(1.6, (Math.min(window.innerWidth, 900) - 48) / base.width);
+        const scale = Math.min(
+          1.6,
+          (Math.min(window.innerWidth, 900) - 48) / base.width,
+        );
         const viewport = pdfPage.getViewport({ scale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -76,9 +122,11 @@ export function PdfReader({
         await task.promise;
       } catch (cause) {
         if (!cancelled) {
-          setError(
-            cause instanceof Error ? cause.message : "Could not open this story.",
-          );
+          const message =
+            cause instanceof Error ? cause.message : "Could not open this story.";
+          if (!message.includes("Rendering cancelled")) {
+            setError(message);
+          }
         }
       } finally {
         if (!cancelled) {
@@ -87,12 +135,12 @@ export function PdfReader({
       }
     }
 
-    void render();
+    void draw();
     return () => {
       cancelled = true;
       renderTask?.cancel();
     };
-  }, [page, token]);
+  }, [page, docReady]);
 
   return (
     <main className="mx-auto flex min-h-full max-w-5xl flex-col px-4 py-8 sm:px-6">
@@ -112,12 +160,12 @@ export function PdfReader({
         className="relative mt-6 overflow-hidden bg-ink/5"
         onContextMenu={(event) => event.preventDefault()}
       >
-        {loading ? (
+        {loading && pageCount === 0 ? (
           <p className="px-4 py-16 text-center text-sm text-ink/60">Loading…</p>
         ) : null}
         <canvas
           ref={canvasRef}
-          className={`mx-auto max-w-full ${loading || error ? "hidden" : "block"}`}
+          className={`mx-auto max-w-full ${error || (loading && pageCount === 0) ? "hidden" : "block"}`}
         />
         {!error ? (
           <div
