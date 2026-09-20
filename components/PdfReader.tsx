@@ -12,7 +12,7 @@ type PdfDocument = {
       viewport: { width: number; height: number };
     }) => { cancel: () => void; promise: Promise<unknown> };
   }>;
-  destroy: () => Promise<void>;
+  destroy?: () => Promise<void>;
 };
 
 export function PdfReader({
@@ -55,9 +55,10 @@ export function PdfReader({
         const data = await response.arrayBuffer();
         const pdfjs = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-        const pdf = (await pdfjs.getDocument({ data }).promise) as PdfDocument;
+        const pdf = (await pdfjs.getDocument({ data })
+          .promise) as unknown as PdfDocument;
         if (cancelled) {
-          await pdf.destroy();
+          await pdf.destroy?.();
           return;
         }
         docRef.current = pdf;
@@ -78,7 +79,7 @@ export function PdfReader({
       cancelled = true;
       const current = docRef.current;
       docRef.current = null;
-      void current?.destroy();
+      void current?.destroy?.();
     };
   }, [token]);
 
@@ -87,6 +88,7 @@ export function PdfReader({
     if (!pdf || docReady === 0) {
       return;
     }
+    const openedPdf = pdf;
 
     let cancelled = false;
     let renderTask: { cancel: () => void; promise: Promise<unknown> } | undefined;
@@ -95,8 +97,8 @@ export function PdfReader({
       setLoading(true);
       setError(null);
       try {
-        const current = Math.min(Math.max(page, 1), pdf.numPages);
-        const pdfPage = await pdf.getPage(current);
+        const current = Math.min(Math.max(page, 1), openedPdf.numPages);
+        const pdfPage = await openedPdf.getPage(current);
         const canvas = canvasRef.current;
         if (!canvas || cancelled) {
           return;
