@@ -18,7 +18,11 @@ export const metadata: Metadata = {
     "Short stories, ten dollars a title. Buy two, get one free. Pay with Cash App.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html
       lang="en"

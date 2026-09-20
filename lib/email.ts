@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import type { Book } from "@/data/books";
 import { formatUsdFromCents } from "@/lib/pricing";
+import { signReadToken } from "@/lib/read-token";
+import { getSiteUrl } from "@/lib/square";
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
@@ -10,10 +12,12 @@ export async function sendOrderEmail({
   to,
   books,
   totalCents,
+  orderId,
 }: {
   to: string;
   books: Book[];
   totalCents: number;
+  orderId?: string;
 }): Promise<{ error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -30,6 +34,16 @@ export async function sendOrderEmail({
     process.env.EMAIL_REPLY_TO ?? "ghettolink22@gmail.com";
   const titles = books.map((book) => book.title);
   const list = titles.map((title) => `<li>${escapeHtml(title)}</li>`).join("");
+  const links = readLinks(books, to, orderId);
+  const linkBlock =
+    links.length > 0
+      ? `<p>Open your stories on the site (each link is tied to this email):</p><ul>${links
+          .map(
+            (link) =>
+              `<li><a href="${escapeHtml(link.href)}">Read ${escapeHtml(link.title)}</a></li>`,
+          )
+          .join("")}</ul>`
+      : `<p>Open your stories on the site. The link is tied to this email.</p>`;
 
   const resend = new Resend(apiKey);
   const bcc =
@@ -45,7 +59,8 @@ export async function sendOrderEmail({
       <p>We received payment for:</p>
       <ul>${list}</ul>
       <p>Total: ${formatUsdFromCents(totalCents)}</p>
-      <p>Digital files will be emailed after this confirmation. Reply to this message if you need help.</p>
+      ${linkBlock}
+      <p>Reply to this message if you need help.</p>
     `,
   });
 
@@ -55,6 +70,29 @@ export async function sendOrderEmail({
   }
 
   return {};
+}
+
+function readLinks(books: Book[], email: string, orderId?: string) {
+  if (!orderId) {
+    return [];
+  }
+  const siteUrl = getSiteUrl();
+  return books.flatMap((book) => {
+    const token = signReadToken({
+      orderId,
+      bookId: book.id,
+      email,
+    });
+    if (!token) {
+      return [];
+    }
+    return [
+      {
+        title: book.title,
+        href: `${siteUrl}/read/${encodeURIComponent(token)}`,
+      },
+    ];
+  });
 }
 
 function escapeHtml(value: string): string {

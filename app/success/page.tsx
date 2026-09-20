@@ -43,9 +43,9 @@ function messageFor(
 ): string {
   switch (status) {
     case "sent":
-      return "Payment is in. Check the inbox you used at checkout for a confirmation email.";
+      return "Payment is in. Check the inbox you used at checkout for links to read your stories on this site.";
     case "already":
-      return "This order already has a confirmation email. Check your inbox and spam folder.";
+      return "This order already has a confirmation email with read links. Check your inbox and spam folder.";
     case "unpaid":
       return "We have not seen a completed Square payment yet. Finish checkout, then refresh this page.";
     case "email_failed":

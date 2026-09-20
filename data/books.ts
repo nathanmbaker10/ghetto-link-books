@@ -104,3 +104,7 @@ export function getBooksByTitles(titles: string[]): Book[] {
   const wanted = new Set(titles);
   return books.filter((book) => wanted.has(book.title));
 }
+
+export function getBookById(id: string): Book | undefined {
+  return books.find((book) => book.id === id);
+}

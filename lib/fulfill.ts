@@ -1,5 +1,5 @@
-import { getBooksByIds, getBooksByTitles } from "@/data/books";
 import { sendOrderEmail } from "@/lib/email";
+import { booksOnOrder, isOrderPaid } from "@/lib/order-access";
 import { totalCents } from "@/lib/pricing";
 import { getSquareClient } from "@/lib/square";
 
@@ -9,16 +9,6 @@ export type FulfillResult =
   | { status: "unpaid" }
   | { status: "missing" }
   | { status: "email_failed"; error: string };
-
-function isOrderPaid(order: {
-  state?: string;
-  tenders?: unknown[] | null;
-}): boolean {
-  if (order.state === "COMPLETED") {
-    return true;
-  }
-  return (order.tenders ?? []).length > 0;
-}
 
 async function getBuyerEmail(
   order: {
@@ -128,16 +118,7 @@ export async function fulfillPaidOrder(
     return { status: "unpaid" };
   }
 
-  const bookIds = (order.lineItems ?? [])
-    .map((item) => item.note)
-    .filter((note): note is string => Boolean(note));
-  const titles = (order.lineItems ?? [])
-    .map((item) => item.name)
-    .filter((name): name is string => Boolean(name));
-  const selectedBooks =
-    getBooksByIds(bookIds).length > 0
-      ? getBooksByIds(bookIds)
-      : getBooksByTitles(titles);
+  const selectedBooks = booksOnOrder(order);
   if (selectedBooks.length === 0) {
     return { status: "missing" };
   }
@@ -166,6 +147,7 @@ export async function fulfillPaidOrder(
     to: email,
     books: selectedBooks,
     totalCents: totalCents(selectedBooks.length),
+    orderId,
   });
 
   if (error) {

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local order records for email fulfillment
 .data/
+
+# purchased story files (never commit PDFs)
+/private/books/*.pdf
