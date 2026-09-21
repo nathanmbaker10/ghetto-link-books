@@ -46,7 +46,7 @@ export const books: Book[] = [
   {
     id: "getting-at-my-homeboys-girl",
     title: "Getting at My Homeboy's Girl",
-    cover: "/covers/getting-at-my-homeboys-girl.png",
+    cover: "/covers/getting-at-my-homeboys-girl.jpg",
     blurb: "I did not know this was his girlfriend.",
   },
   {
@@ -64,7 +64,7 @@ export const books: Book[] = [
   {
     id: "playing-the-girls",
     title: "Playing the Girls",
-    cover: "/covers/playing-the-girls.png",
+    cover: "/covers/playing-the-girls.jpg",
     blurb: "And know how to play.",
   },
   {
