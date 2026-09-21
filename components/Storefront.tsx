@@ -44,6 +44,10 @@ export function Storefront({ books }: { books: Book[] }) {
   }
 
   function toggleBook(id: string) {
+    const book = books.find((item) => item.id === id);
+    if (book?.comingSoon) {
+      return;
+    }
     setError(null);
     setSelectedIds((current) =>
       current.includes(id)
@@ -116,14 +120,21 @@ export function Storefront({ books }: { books: Book[] }) {
         <ul className="grid h-full grid-cols-7 gap-1.5 sm:gap-2 lg:gap-3">
           {books.map((book) => {
             const selected = selectedIds.includes(book.id);
+            const comingSoon = Boolean(book.comingSoon);
             return (
               <li key={book.id} className="min-h-0">
                 <button
                   type="button"
                   onClick={() => toggleBook(book.id)}
                   aria-pressed={selected}
+                  aria-disabled={comingSoon}
+                  disabled={comingSoon}
                   className={`flex h-full min-h-0 w-full flex-col text-left outline-none transition ${
-                    selected ? "ring-2 ring-gold ring-offset-2 ring-offset-paper" : ""
+                    comingSoon
+                      ? "cursor-not-allowed"
+                      : selected
+                        ? "ring-2 ring-gold ring-offset-2 ring-offset-paper"
+                        : ""
                   }`}
                 >
                   <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-ink/10">
@@ -131,15 +142,24 @@ export function Storefront({ books }: { books: Book[] }) {
                     <img
                       src={book.cover}
                       alt={book.title}
-                      className="max-h-full max-w-full object-contain"
+                      className={`max-h-full max-w-full object-contain ${
+                        comingSoon ? "opacity-40 grayscale" : ""
+                      }`}
                     />
+                    {comingSoon ? (
+                      <span className="absolute inset-x-1 bottom-1 bg-ink/80 px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-paper">
+                        Coming soon
+                      </span>
+                    ) : null}
                     {selected ? (
                       <span className="absolute right-1.5 top-1.5 bg-gold px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink">
                         Selected
                       </span>
                     ) : null}
                   </div>
-                  <h3 className="mt-1 min-h-[2.8em] shrink-0 text-center font-serif text-[10px] leading-tight text-ink sm:min-h-[3em] sm:text-xs lg:text-sm">
+                  <h3 className={`mt-1 min-h-[2.8em] shrink-0 text-center font-serif text-[10px] leading-tight sm:min-h-[3em] sm:text-xs lg:text-sm ${
+                    comingSoon ? "text-ink/45" : "text-ink"
+                  }`}>
                     {book.title}
                   </h3>
                 </button>

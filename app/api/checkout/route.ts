@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { SquareError } from "square";
-import { getBooksByIds } from "@/data/books";
+import { getBooksByIds, isBookForSale } from "@/data/books";
 import {
   BOOK_PRICE_CENTS,
   freeBookCount,
@@ -54,6 +54,13 @@ export async function POST(request: Request) {
   if (selectedBooks.length !== uniqueIds.length) {
     return NextResponse.json(
       { error: "One or more selected books are not in the catalog." },
+      { status: 400 },
+    );
+  }
+
+  if (selectedBooks.some((book) => !isBookForSale(book))) {
+    return NextResponse.json(
+      { error: "One or more selected books are not for sale yet." },
       { status: 400 },
     );
   }

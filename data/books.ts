@@ -3,6 +3,7 @@ export type Book = {
   title: string;
   cover: string;
   blurb: string;
+  comingSoon?: boolean;
 };
 
 export const books: Book[] = [
@@ -83,12 +84,14 @@ export const books: Book[] = [
     title: "Midnight Run",
     cover: "/covers/midnight-run.png",
     blurb: "A Fillmore horror story",
+    comingSoon: true,
   },
   {
     id: "i-went-to-jail-to-fellowship-with-god",
     title: "I Went to Jail to Fellowship with God",
     cover: "/covers/i-went-to-jail-to-fellowship-with-god.jpg",
     blurb: "By GhettoLink",
+    comingSoon: true,
   },
 ];
 
@@ -107,4 +110,8 @@ export function getBooksByTitles(titles: string[]): Book[] {
 
 export function getBookById(id: string): Book | undefined {
   return books.find((book) => book.id === id);
+}
+
+export function isBookForSale(book: Book): boolean {
+  return !book.comingSoon;
 }
