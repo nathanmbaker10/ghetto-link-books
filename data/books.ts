@@ -40,7 +40,7 @@ export const books: Book[] = [
   {
     id: "money-truck",
     title: "Money Truck",
-    cover: "/covers/money-truck.png",
+    cover: "/covers/money-truck.jpg",
     blurb: "By Ghettolink",
   },
   {
