@@ -10,11 +10,28 @@ import {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function InfoIcon({
+  className = "",
+  sizeClassName = "h-6 w-6 text-xs",
+}: {
+  className?: string;
+  sizeClassName?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full border border-ink/20 bg-paper/95 font-serif font-semibold text-ink shadow-sm ${sizeClassName} ${className}`}
+    >
+      i
+    </span>
+  );
+}
+
 export function Storefront({ books }: { books: Book[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [summaryBook, setSummaryBook] = useState<Book | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const selectedBooks = useMemo(
@@ -114,6 +131,9 @@ export function Storefront({ books }: { books: Book[] }) {
         <p className="mt-1 text-center text-xl text-ink/80 sm:text-2xl">
           $10 each buy 2 get one free.
         </p>
+        <p className="mt-2 flex items-center justify-center gap-2 text-center text-xl text-ink/70 sm:text-2xl">
+          Press the <InfoIcon sizeClassName="h-8 w-8 text-sm" /> on a book for a summary.
+        </p>
       </header>
 
       <section className="min-h-0 flex-1 px-2 py-2 sm:px-4 sm:py-3">
@@ -122,7 +142,15 @@ export function Storefront({ books }: { books: Book[] }) {
             const selected = selectedIds.includes(book.id);
             const comingSoon = Boolean(book.comingSoon);
             return (
-              <li key={book.id} className="min-h-0">
+              <li key={book.id} className="relative min-h-0">
+                <button
+                  type="button"
+                  onClick={() => setSummaryBook(book)}
+                  aria-label={`Summary of ${book.title}`}
+                  className="group absolute left-1 top-1 z-10 rounded-full"
+                >
+                  <InfoIcon className="group-hover:border-gold group-hover:text-gold" />
+                </button>
                 <button
                   type="button"
                   onClick={() => toggleBook(book.id)}
@@ -230,6 +258,41 @@ export function Storefront({ books }: { books: Book[] }) {
           </p>
         ) : null}
       </form>
+      {summaryBook ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          onClick={() => setSummaryBook(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="book-summary-title"
+            className="w-full max-w-lg bg-paper px-6 py-5 shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[10px] uppercase tracking-[0.28em] text-gold">
+              {summaryBook.comingSoon ? "Coming soon" : "Story summary"}
+            </p>
+            <h2
+              id="book-summary-title"
+              className="mt-2 font-serif text-3xl text-ink"
+            >
+              {summaryBook.title}
+            </h2>
+            <p className="mt-2 text-sm text-ink/60">{summaryBook.blurb}</p>
+            <p className="mt-4 text-base leading-7 text-ink/85">
+              {summaryBook.summary}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSummaryBook(null)}
+              className="mt-5 bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wider text-paper"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
       {prompt ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
