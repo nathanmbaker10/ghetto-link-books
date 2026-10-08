@@ -19,7 +19,7 @@ function InfoIcon({
 }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full border border-ink/20 bg-paper/95 font-serif font-semibold text-ink shadow-sm ${sizeClassName} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full border border-red-600 bg-paper/95 font-serif font-semibold text-red-600 shadow-sm ${sizeClassName} ${className}`}
     >
       i
     </span>
@@ -187,7 +187,7 @@ export function Storefront({ books }: { books: Book[] }) {
                   >
                     <InfoIcon
                       sizeClassName="h-4 w-4 text-[10px] sm:h-5 sm:w-5 sm:text-xs"
-                      className="group-hover:border-gold group-hover:text-gold"
+                      className="group-hover:border-red-700 group-hover:text-red-700"
                     />
                   </button>
                   <h3 className={`min-h-[2.8em] flex-1 text-center font-serif text-[10px] leading-tight sm:min-h-[3em] sm:text-xs lg:text-sm ${
