@@ -142,22 +142,14 @@ export function Storefront({ books }: { books: Book[] }) {
             const selected = selectedIds.includes(book.id);
             const comingSoon = Boolean(book.comingSoon);
             return (
-              <li key={book.id} className="relative min-h-0">
-                <button
-                  type="button"
-                  onClick={() => setSummaryBook(book)}
-                  aria-label={`Summary of ${book.title}`}
-                  className="group absolute left-1 top-1 z-10 rounded-full"
-                >
-                  <InfoIcon className="group-hover:border-gold group-hover:text-gold" />
-                </button>
+              <li key={book.id} className="flex min-h-0 flex-col">
                 <button
                   type="button"
                   onClick={() => toggleBook(book.id)}
                   aria-pressed={selected}
                   aria-disabled={comingSoon}
                   disabled={comingSoon}
-                  className={`flex h-full min-h-0 w-full flex-col text-left outline-none transition ${
+                  className={`flex min-h-0 w-full flex-1 flex-col text-left outline-none transition ${
                     comingSoon
                       ? "cursor-not-allowed"
                       : selected
@@ -185,12 +177,25 @@ export function Storefront({ books }: { books: Book[] }) {
                       </span>
                     ) : null}
                   </div>
-                  <h3 className={`mt-1 min-h-[2.8em] shrink-0 text-center font-serif text-[10px] leading-tight sm:min-h-[3em] sm:text-xs lg:text-sm ${
+                </button>
+                <div className="mt-1 flex shrink-0 items-start">
+                  <button
+                    type="button"
+                    onClick={() => setSummaryBook(book)}
+                    aria-label={`Summary of ${book.title}`}
+                    className="group mr-1 mt-0.5 shrink-0 rounded-full"
+                  >
+                    <InfoIcon
+                      sizeClassName="h-4 w-4 text-[10px] sm:h-5 sm:w-5 sm:text-xs"
+                      className="group-hover:border-gold group-hover:text-gold"
+                    />
+                  </button>
+                  <h3 className={`min-h-[2.8em] flex-1 text-center font-serif text-[10px] leading-tight sm:min-h-[3em] sm:text-xs lg:text-sm ${
                     comingSoon ? "text-ink/45" : "text-ink"
                   }`}>
                     {book.title}
                   </h3>
-                </button>
+                </div>
               </li>
             );
           })}
