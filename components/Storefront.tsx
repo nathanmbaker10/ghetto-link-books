@@ -142,59 +142,61 @@ export function Storefront({ books }: { books: Book[] }) {
             const selected = selectedIds.includes(book.id);
             const comingSoon = Boolean(book.comingSoon);
             return (
-              <li key={book.id} className="flex min-h-0 min-w-0 flex-col">
-                <button
-                  type="button"
-                  onClick={() => toggleBook(book.id)}
-                  aria-pressed={selected}
-                  aria-disabled={comingSoon}
-                  disabled={comingSoon}
-                  className={`flex min-h-0 w-full flex-1 flex-col text-left outline-none transition ${
-                    comingSoon
-                      ? "cursor-not-allowed"
-                      : selected
-                        ? "ring-2 ring-gold ring-offset-2 ring-offset-paper"
-                        : ""
-                  }`}
-                >
-                  <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-ink/10">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={book.cover}
-                      alt={book.title}
-                      className={`max-h-full max-w-full object-contain ${
-                        comingSoon ? "opacity-40 grayscale" : ""
-                      }`}
-                    />
-                    {comingSoon ? (
-                      <span className="absolute inset-x-1 bottom-1 bg-ink/80 px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-paper">
-                        Coming soon
-                      </span>
-                    ) : null}
-                    {selected ? (
-                      <span className="absolute right-1.5 top-1.5 bg-gold px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink">
-                        Selected
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-                <div className="mt-1 w-full min-w-0 shrink-0 text-center">
+              <li key={book.id} className="flex min-h-0 min-w-0 justify-center">
+                <div className="flex h-full w-fit max-w-full flex-col">
                   <button
                     type="button"
-                    onClick={() => setSummaryBook(book)}
-                    aria-label={`Summary of ${book.title}`}
-                    className="group mb-0.5 inline-flex rounded-full"
+                    onClick={() => toggleBook(book.id)}
+                    aria-pressed={selected}
+                    aria-disabled={comingSoon}
+                    disabled={comingSoon}
+                    className={`flex min-h-0 flex-1 items-center justify-center outline-none transition ${
+                      comingSoon
+                        ? "cursor-not-allowed"
+                        : selected
+                          ? "ring-2 ring-gold ring-offset-2 ring-offset-paper"
+                          : ""
+                    }`}
                   >
-                    <InfoIcon
-                      sizeClassName="h-4 w-4 text-[10px] sm:h-5 sm:w-5 sm:text-xs"
-                      className="group-hover:border-red-700 group-hover:text-red-700"
-                    />
+                    <div className="relative h-full max-w-full">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={book.cover}
+                        alt={book.title}
+                        className={`h-full w-auto max-w-full object-contain ${
+                          comingSoon ? "opacity-40 grayscale" : ""
+                        }`}
+                      />
+                      {comingSoon ? (
+                        <span className="absolute inset-x-1 bottom-1 bg-ink/80 px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-paper">
+                          Coming soon
+                        </span>
+                      ) : null}
+                      {selected ? (
+                        <span className="absolute right-1.5 top-1.5 bg-gold px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink">
+                          Selected
+                        </span>
+                      ) : null}
+                    </div>
                   </button>
-                  <h3 className={`min-h-[2.8em] w-full break-words text-center font-serif text-[10px] leading-tight sm:min-h-[3em] sm:text-xs lg:text-sm ${
-                    comingSoon ? "text-ink/45" : "text-ink"
-                  }`}>
-                    {book.title}
-                  </h3>
+                  <div className="mt-1 w-full min-w-0 shrink-0 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setSummaryBook(book)}
+                      aria-label={`Summary of ${book.title}`}
+                      className="group mb-0.5 inline-flex rounded-full"
+                    >
+                      <InfoIcon
+                        sizeClassName="h-4 w-4 text-[10px] sm:h-5 sm:w-5 sm:text-xs"
+                        className="group-hover:border-red-700 group-hover:text-red-700"
+                      />
+                    </button>
+                    <h3 className={`w-full break-words text-center font-serif text-[10px] leading-tight sm:text-xs ${
+                      comingSoon ? "text-ink/45" : "text-ink"
+                    }`}>
+                      {book.title}
+                    </h3>
+                  </div>
                 </div>
               </li>
             );
